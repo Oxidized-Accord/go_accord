@@ -30,7 +30,20 @@ message GetResponse {
   Message message = 1;
 }
 
+message ListRequest {
+  string user = 1;
+}
+
+message ListResponse {
+  repeated Message messages = 1;
+}
 service MessagingService {
   rpc SendMessage(SendRequest) returns (SendResponse);
   rpc GetMessage(GetRequest) returns (GetResponse);
+  rpc ListMessagesBySender(ListRequest) returns (ListResponse);
+  rpc ListMessagesByReceiver(ListRequest) returns (ListResponse);
 }
+
+
+
+

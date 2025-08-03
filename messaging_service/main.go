@@ -17,7 +17,10 @@ import (
 
 type server struct {
 	pb.UnimplementedMessagingServiceServer
-	messages sync.Map
+	messages      sync.Map
+	senderIndex   map[string][]string
+	receiverIndex map[string][]string
+	mu            sync.RWMutex
 }
 
 func (s *server) SendMessage(ctx context.Context, req *pb.SendRequest) (*pb.SendResponse, error) {
@@ -33,7 +36,13 @@ func (s *server) SendMessage(ctx context.Context, req *pb.SendRequest) (*pb.Send
 	}
 
 	s.messages.Store(id, msg)
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.senderIndex[req.Sender] = append(s.senderIndex[req.Sender], id)
+	s.receiverIndex[req.Receiver] = append(s.receiverIndex[req.Receiver], id)
 	return &pb.SendResponse{Message: msg}, nil
+
 }
 
 func (s *server) GetMessage(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, error) {
@@ -42,6 +51,21 @@ func (s *server) GetMessage(ctx context.Context, req *pb.GetRequest) (*pb.GetRes
 		return nil, status.Errorf(404, "message not found")
 	}
 	return &pb.GetResponse{Message: val.(*pb.Message)}, nil
+}
+
+func (s *server) ListMessagesBySender(ctx context.Context, req *pb.ListRequest) (*pb.ListResponse, error) {
+	s.mu.RLock()
+	ids := s.senderIndex[req.User]
+	s.mu.RUnlock()
+
+	var results []*pb.Message
+
+	for _, id := range ids {
+		if val, ok := s.messages.Load(id); ok {
+			results = append(results, val.(*pb.Message))
+		}
+	}
+	return &pb.ListResponse{Messages: results}, nil
 }
 
 func main() {
