@@ -1,0 +1,19 @@
+# Environment files
+.env
+env
+env.dbcredentials
+*.env
+
+# Build artifacts
+bin/
+*.exe
+*.out
+messaging_service
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
