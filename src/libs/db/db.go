@@ -14,9 +14,9 @@ func Connect() *sql.DB {
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		os.Getenv("DB_HOST"),
 		os.Getenv("DB_PORT"),
-		os.Getenv("DB_USER"),
-		os.Getenv("DB_PASSWORD"),
-		os.Getenv("DB_NAME"))
+		os.Getenv("POSTGRES_USER"),
+		os.Getenv("POSTGRES_PASSWORD"),
+		os.Getenv("POSTGRES_DB"))
 
 	var db *sql.DB
 	var err error
@@ -24,9 +24,16 @@ func Connect() *sql.DB {
 	//Retry logika
 	for i := 0; i < 10; i++ {
 		db, err = sql.Open("postgres", connStr)
-		if err == nil && db.Ping() == nil {
-			log.Println("Connected to PostgreSQL")
-			return db
+		if err != nil {
+			log.Printf("Failed to open DB: %v", err)
+		} else {
+			// Check if the DB is really ready
+			err = db.Ping()
+			if err == nil {
+				log.Println("Connected to PostgreSQL")
+				return db
+			}
+			log.Printf("Ping failed: %v", err)
 		}
 		log.Printf("Waiting for Db... (%d/10)", i+1)
 		time.Sleep(2 * time.Second)
