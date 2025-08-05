@@ -5,7 +5,6 @@ env.dbcredentials
 *.env
 
 # Build artifacts
-bin/
 *.exe
 *.out
 messaging_service
