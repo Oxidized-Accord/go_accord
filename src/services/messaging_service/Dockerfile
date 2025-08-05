@@ -5,16 +5,12 @@ WORKDIR /app
 # Install git for go mod download
 RUN apk add --no-cache git
 
-# Copy go mod files
-COPY go.mod go.sum ./
-
-# Download dependencies
-RUN go mod download
-
-# Copy source code
+# Copy project
 COPY . .
 
-# Build the application
+WORKDIR /app/src/services/messaging_service
+RUN go mod download
+
 RUN go build -o messaging_service .
 
 EXPOSE 50051
