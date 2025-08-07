@@ -4,10 +4,9 @@ import (
 	"log"
 	"net"
 
-	pb "messaging_service/messaging/proto"
-	processes "messaging_service/processes"
-
 	db "GOGOGO/src/libs/db"
+	pb "messaging_service/messaging/proto"
+	server "messaging_service/server"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -23,7 +22,7 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	grpcServer := grpc.NewServer()
-	srv := processes.NewMessagingServer(database)
+	srv := server.NewMessagingServer(database)
 
 	pb.RegisterMessagingServiceServer(grpcServer, srv)
 	reflection.Register(grpcServer)

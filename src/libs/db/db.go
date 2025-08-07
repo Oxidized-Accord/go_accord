@@ -36,6 +36,7 @@ func Connect() *sql.DB {
 			log.Printf("Ping failed: %v", err)
 		}
 		log.Printf("Waiting for Db... (%d/10)", i+1)
+		log.Printf("db connection address %s", connStr)
 		time.Sleep(2 * time.Second)
 	}
 
