@@ -25,31 +25,31 @@ func (s *server) SendMessage(ctx context.Context, req *pb.SendRequest) (*pb.Send
 	timestamp := time.Now().UTC().Format(time.RFC3339)
 
 	// Insert message into database
-	query := `INSERT INTO messages (id, sender, receiver, content, timestamp) VALUES ($1, $2, $3, $4, $5)`
-	_, err := s.db.ExecContext(ctx, query, id, req.Sender, req.Receiver, req.Content, timestamp)
+	query := `INSERT INTO messages (id, conversation_id, sender, content, timestamp) VALUES ($1, $2, $3, $4, $5)`
+	_, err := s.db.ExecContext(ctx, query, id, req.ConversationId, req.Sender, req.Content, timestamp)
 	if err != nil {
 		return nil, status.Errorf(500, "failed to save message: %v", err)
 	}
 
 	msg := &pb.Message{
-		Id:        id,
-		Sender:    req.Sender,
-		Receiver:  req.Receiver,
-		Content:   req.Content,
-		Timestamp: timestamp,
+		Id:             id,
+		ConversationId: req.ConversationId,
+		Sender:         req.Sender,
+		Content:        req.Content,
+		Timestamp:      timestamp,
 	}
 
 	return &pb.SendResponse{Message: msg}, nil
 }
 
 func (s *server) GetMessage(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, error) {
-	query := `SELECT id, sender, receiver, content, timestamp FROM messages WHERE id = $1`
+	query := `SELECT id, conversation_id, sender, content, timestamp FROM messages WHERE id = $1`
 
 	var msg pb.Message
 	err := s.db.QueryRowContext(ctx, query, req.Id).Scan(
 		&msg.Id,
+		&msg.ConversationId,
 		&msg.Sender,
-		&msg.Receiver,
 		&msg.Content,
 		&msg.Timestamp,
 	)
@@ -64,10 +64,10 @@ func (s *server) GetMessage(ctx context.Context, req *pb.GetRequest) (*pb.GetRes
 	return &pb.GetResponse{Message: &msg}, nil
 }
 
-func (s *server) ListMessagesBySender(ctx context.Context, req *pb.ListRequest) (*pb.ListResponse, error) {
-	query := `SELECT id, sender, receiver, content, timestamp FROM messages WHERE sender = $1 ORDER BY timestamp DESC`
+func (s *server) ListMessages(ctx context.Context, req *pb.ListRequest) (*pb.ListResponse, error) {
+	query := `SELECT id, conversation_id, sender, content, timestamp FROM messages WHERE conversation_id = $1 ORDER BY timestamp DESC`
+	rows, err := s.db.QueryContext(ctx, query, req.ConversationId)
 
-	rows, err := s.db.QueryContext(ctx, query, req.User)
 	if err != nil {
 		return nil, status.Errorf(500, "failed to query messages: %v", err)
 	}
@@ -76,7 +76,7 @@ func (s *server) ListMessagesBySender(ctx context.Context, req *pb.ListRequest) 
 	var messages []*pb.Message
 	for rows.Next() {
 		var msg pb.Message
-		err := rows.Scan(&msg.Id, &msg.Sender, &msg.Receiver, &msg.Content, &msg.Timestamp)
+		err := rows.Scan(&msg.Id, &msg.ConversationId, &msg.Sender, &msg.Content, &msg.Timestamp)
 		if err != nil {
 			return nil, status.Errorf(500, "failed to scan message: %v", err)
 		}
@@ -90,28 +90,40 @@ func (s *server) ListMessagesBySender(ctx context.Context, req *pb.ListRequest) 
 	return &pb.ListResponse{Messages: messages}, nil
 }
 
-func (s *server) ListMessagesByReceiver(ctx context.Context, req *pb.ListRequest) (*pb.ListResponse, error) {
-	query := `SELECT id, sender, receiver, content, timestamp FROM messages WHERE receiver = $1 ORDER BY timestamp DESC`
+/*
+	func (s *server) ListMessagesBySender(ctx context.Context, req *pb.ListRequest) (*pb.ListResponse, error) {
+		query := `SELECT id, sender, Sender, content, timestamp FROM messages WHERE Sender = $1 ORDER BY timestamp DESC`
 
-	rows, err := s.db.QueryContext(ctx, query, req.User)
-	if err != nil {
-		return nil, status.Errorf(500, "failed to query messages: %v", err)
-	}
-	defer rows.Close()
-
-	var messages []*pb.Message
-	for rows.Next() {
-		var msg pb.Message
-		err := rows.Scan(&msg.Id, &msg.Sender, &msg.Receiver, &msg.Content, &msg.Timestamp)
+		rows, err := s.db.QueryContext(ctx, query, req.ConversationId)
 		if err != nil {
-			return nil, status.Errorf(500, "failed to scan message: %v", err)
+			return nil, status.Errorf(500, "failed to query messages: %v", err)
 		}
-		messages = append(messages, &msg)
-	}
+		defer rows.Close()
 
-	if err = rows.Err(); err != nil {
-		return nil, status.Errorf(500, "error iterating messages: %v", err)
-	}
+		var messages []*pb.Message
+		for rows.Next() {
+			var msg pb.Message
+			err := rows.Scan(&msg.Id, &msg.ConversationId, &msg.Sender, &msg.Content, &msg.Timestamp)
+			if err != nil {
+				return nil, status.Errorf(500, "failed to scan message: %v", err)
+			}
+			messages = append(messages, &msg)
+		}
 
-	return &pb.ListResponse{Messages: messages}, nil
+		if err = rows.Err(); err != nil {
+			return nil, status.Errorf(500, "error iterating messages: %v", err)
+		}
+
+		return &pb.ListResponse{Messages: messages}, nil
+	}
+*/
+func (s *server) CreateConversation(ctx context.Context, req *pb.Conversation) (*pb.Conversation, error) {
+	id := uuid.New().String()
+	timestamp := time.Now().UTC().Format(time.RFC3339)
+	query := "INSERT INTO conversations (id, timestamp) VALUES ($1, $2)"
+	_, err := s.db.ExecContext(ctx, query, id, timestamp)
+	if err != nil {
+		return nil, status.Errorf(500, "failed to create conversation, %v", err)
+	}
+	return &pb.Conversation{Id: id, Timestamp: timestamp}, nil
 }
