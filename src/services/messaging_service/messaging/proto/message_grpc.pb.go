@@ -2,13 +2,12 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v6.31.1
-// source: proto/message.proto
+// source: message.proto
 
 package proto
 
 import (
 	context "context"
-
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -20,10 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	MessagingService_SendMessage_FullMethodName            = "/messaging.MessagingService/SendMessage"
-	MessagingService_GetMessage_FullMethodName             = "/messaging.MessagingService/GetMessage"
-	MessagingService_ListMessagesBySender_FullMethodName   = "/messaging.MessagingService/ListMessagesBySender"
-	MessagingService_ListMessagesByReceiver_FullMethodName = "/messaging.MessagingService/ListMessagesByReceiver"
+	MessagingService_SendMessage_FullMethodName        = "/messaging.MessagingService/SendMessage"
+	MessagingService_GetMessage_FullMethodName         = "/messaging.MessagingService/GetMessage"
+	MessagingService_ListMessages_FullMethodName       = "/messaging.MessagingService/ListMessages"
+	MessagingService_CreateConversation_FullMethodName = "/messaging.MessagingService/CreateConversation"
 )
 
 // MessagingServiceClient is the client API for MessagingService service.
@@ -32,8 +31,8 @@ const (
 type MessagingServiceClient interface {
 	SendMessage(ctx context.Context, in *SendRequest, opts ...grpc.CallOption) (*SendResponse, error)
 	GetMessage(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
-	ListMessagesBySender(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error)
-	ListMessagesByReceiver(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error)
+	ListMessages(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error)
+	CreateConversation(ctx context.Context, in *Conversation, opts ...grpc.CallOption) (*Conversation, error)
 }
 
 type messagingServiceClient struct {
@@ -64,20 +63,20 @@ func (c *messagingServiceClient) GetMessage(ctx context.Context, in *GetRequest,
 	return out, nil
 }
 
-func (c *messagingServiceClient) ListMessagesBySender(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error) {
+func (c *messagingServiceClient) ListMessages(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListResponse)
-	err := c.cc.Invoke(ctx, MessagingService_ListMessagesBySender_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, MessagingService_ListMessages_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *messagingServiceClient) ListMessagesByReceiver(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error) {
+func (c *messagingServiceClient) CreateConversation(ctx context.Context, in *Conversation, opts ...grpc.CallOption) (*Conversation, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListResponse)
-	err := c.cc.Invoke(ctx, MessagingService_ListMessagesByReceiver_FullMethodName, in, out, cOpts...)
+	out := new(Conversation)
+	err := c.cc.Invoke(ctx, MessagingService_CreateConversation_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -90,8 +89,8 @@ func (c *messagingServiceClient) ListMessagesByReceiver(ctx context.Context, in 
 type MessagingServiceServer interface {
 	SendMessage(context.Context, *SendRequest) (*SendResponse, error)
 	GetMessage(context.Context, *GetRequest) (*GetResponse, error)
-	ListMessagesBySender(context.Context, *ListRequest) (*ListResponse, error)
-	ListMessagesByReceiver(context.Context, *ListRequest) (*ListResponse, error)
+	ListMessages(context.Context, *ListRequest) (*ListResponse, error)
+	CreateConversation(context.Context, *Conversation) (*Conversation, error)
 	mustEmbedUnimplementedMessagingServiceServer()
 }
 
@@ -108,11 +107,11 @@ func (UnimplementedMessagingServiceServer) SendMessage(context.Context, *SendReq
 func (UnimplementedMessagingServiceServer) GetMessage(context.Context, *GetRequest) (*GetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetMessage not implemented")
 }
-func (UnimplementedMessagingServiceServer) ListMessagesBySender(context.Context, *ListRequest) (*ListResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListMessagesBySender not implemented")
+func (UnimplementedMessagingServiceServer) ListMessages(context.Context, *ListRequest) (*ListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListMessages not implemented")
 }
-func (UnimplementedMessagingServiceServer) ListMessagesByReceiver(context.Context, *ListRequest) (*ListResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListMessagesByReceiver not implemented")
+func (UnimplementedMessagingServiceServer) CreateConversation(context.Context, *Conversation) (*Conversation, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateConversation not implemented")
 }
 func (UnimplementedMessagingServiceServer) mustEmbedUnimplementedMessagingServiceServer() {}
 func (UnimplementedMessagingServiceServer) testEmbeddedByValue()                          {}
@@ -171,38 +170,38 @@ func _MessagingService_GetMessage_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _MessagingService_ListMessagesBySender_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _MessagingService_ListMessages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MessagingServiceServer).ListMessagesBySender(ctx, in)
+		return srv.(MessagingServiceServer).ListMessages(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: MessagingService_ListMessagesBySender_FullMethodName,
+		FullMethod: MessagingService_ListMessages_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MessagingServiceServer).ListMessagesBySender(ctx, req.(*ListRequest))
+		return srv.(MessagingServiceServer).ListMessages(ctx, req.(*ListRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _MessagingService_ListMessagesByReceiver_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListRequest)
+func _MessagingService_CreateConversation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Conversation)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MessagingServiceServer).ListMessagesByReceiver(ctx, in)
+		return srv.(MessagingServiceServer).CreateConversation(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: MessagingService_ListMessagesByReceiver_FullMethodName,
+		FullMethod: MessagingService_CreateConversation_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MessagingServiceServer).ListMessagesByReceiver(ctx, req.(*ListRequest))
+		return srv.(MessagingServiceServer).CreateConversation(ctx, req.(*Conversation))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -223,14 +222,14 @@ var MessagingService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _MessagingService_GetMessage_Handler,
 		},
 		{
-			MethodName: "ListMessagesBySender",
-			Handler:    _MessagingService_ListMessagesBySender_Handler,
+			MethodName: "ListMessages",
+			Handler:    _MessagingService_ListMessages_Handler,
 		},
 		{
-			MethodName: "ListMessagesByReceiver",
-			Handler:    _MessagingService_ListMessagesByReceiver_Handler,
+			MethodName: "CreateConversation",
+			Handler:    _MessagingService_CreateConversation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/message.proto",
+	Metadata: "message.proto",
 }
