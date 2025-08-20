@@ -1,0 +1,3 @@
+[submodule "src/services/proto/grpc-proto"]
+	path = src/services/proto/grpc-proto
+	url = https://github.com/Oxidized-Accord/grpc-proto.git
